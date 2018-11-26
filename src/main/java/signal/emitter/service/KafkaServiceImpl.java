@@ -26,19 +26,24 @@ public class KafkaServiceImpl implements KafkaService {
     @Scheduled(initialDelay = 3000, fixedRate = 1000)
     public void run() {
 
-        final Producer<Long, String> producer = KafkaProducerFactory.createProducer();
+        try (final Producer<Long, String> producer = KafkaProducerFactory.createProducer()) {
 
-        Stream.of(KafkaSettings.TOPIC_1_NAME, KafkaSettings.TOPIC_2_NAME, KafkaSettings.TOPIC_3_NAME).forEach(topic -> {
-            final String jsonRecord = emitterService.emit();
-            final ProducerRecord<Long, String> record = new ProducerRecord<>(topic, jsonRecord);
+            Stream.of(KafkaSettings.TOPIC_1_NAME, KafkaSettings.TOPIC_2_NAME, KafkaSettings.TOPIC_3_NAME).forEach(topic -> {
+                final String jsonRecord = emitterService.emit();
+                final ProducerRecord<Long, String> record = new ProducerRecord<>(topic, jsonRecord);
 
-            try {
-                final RecordMetadata recordMetadata = producer.send(record).get();
-                System.out.printf(recordMetadata.toString());
+                try {
+                    final RecordMetadata recordMetadata = producer.send(record).get();
+                    System.out.printf("Metadata received: %s, partition: %d, offset: %s, topic: %s",
+                            recordMetadata.toString(), recordMetadata.partition(), recordMetadata.offset(), recordMetadata.topic());
 
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
-            }
-        });
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+
+                } finally {
+                    producer.flush();
+                }
+            });
+        }
     }
 }
