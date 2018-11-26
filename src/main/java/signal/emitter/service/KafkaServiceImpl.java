@@ -34,7 +34,7 @@ public class KafkaServiceImpl implements KafkaService {
 
                 try {
                     final RecordMetadata recordMetadata = producer.send(record).get();
-                    System.out.printf("Metadata received: %s, partition: %d, offset: %s, topic: %s",
+                    System.out.printf("\nMetadata received: %s, partition: %d, offset: %s, topic: %s\n",
                             recordMetadata.toString(), recordMetadata.partition(), recordMetadata.offset(), recordMetadata.topic());
 
                 } catch (InterruptedException | ExecutionException e) {
